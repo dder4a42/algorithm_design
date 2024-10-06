@@ -29,27 +29,27 @@ void read_input_data_vector()
  }
 }
 
-pair<int, int> partition(vector <int> &a, int pivot) {
+pair<int, int> partition(vector <int> &a, int l, int r, int pivot) {
+    int nl=l, nr=r;
     int i=0, j=0;
-    int l=0, r=0;
-    while (j<a.size()) {
+    while (j<=r) {
         if(a[j] < pivot) {
             swap(a[j], a[i]);
             ++i;
         }
         ++j;
     }
-    l = i;
+    nl = i;
     j = i;
-    while (j<a.size()) {
+    while (j<=r) {
         if(a[j] == pivot) {
             swap(a[j], a[i]);
             ++i;
         }
         ++j;
     }
-    r = i;
-    return {l, r};
+    nr = i;
+    return {nl, nr};
 }
 
 int choose_pivot(vector<int>& arr, int l, int r) {
@@ -61,10 +61,10 @@ int choose_pivot(vector<int>& arr, int l, int r) {
 }
 
 int quick_select(vector<int>& arr, int l, int r, int k) {
-    if(l >= r) return arr[l];
+    if(l >= r) return arr[r];
     int pivot = choose_pivot(arr, l, r);
     // cout << "pivot is " << pivot << "\n";
-    auto [nl, nr] = partition(arr, pivot);
+    auto [nl, nr] = partition(arr, l, r, pivot);
     // cout << "arr is ";
     // for(auto x: a) cout << x << " ";
     // cout << "\n";
