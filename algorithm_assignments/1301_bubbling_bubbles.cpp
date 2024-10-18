@@ -4,7 +4,7 @@
 using namespace std;
 
 int n;
-int* origin;
+// int* origin;
 vector<int> arr;
 vector<int> table;
 
@@ -79,14 +79,14 @@ int main() {
 
     
     cin >> n;
-    origin = new int [n];
+    // origin = new int [n];
     table.resize(n+1);
     for(int i=0;i<n;++i) {
         int x;
         cin >> x;
         arr.push_back(x);
         table[i+1]=0;
-        origin[i] = x;
+        // origin[i] = x;
     }
 
     // cout << "arr[" << 0 << ":" << n-1 << "] is ";
@@ -99,6 +99,6 @@ int main() {
     for(int i=1;i<=n;++i) {
         cout << table[i] << " \n"[i==n];
     }
-    delete [] origin;
+    // delete [] origin;
     return 0;
 }

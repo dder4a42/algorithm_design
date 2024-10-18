@@ -9,6 +9,6 @@ if [ ! -f "$name" ]; then
     exit 1  
 fi  
 
-g++ "$name" -o "./bin/$outout.out"
+g++ "$name" -o "./bin/$outout.out" -g
 
 echo "$name has been compiled."
