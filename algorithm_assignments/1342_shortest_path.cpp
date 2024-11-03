@@ -1,6 +1,7 @@
 #include<iostream>
 #include<vector>
 #include<queue>
+#include<map>
 #include<unordered_map>
 using namespace std;
 typedef long long ll;
@@ -24,13 +25,14 @@ int main() {
 
     int n, m, s, t;
     cin >> n >> m >> s >> t;
-    vector< vector<ll> > graph(n+1, vector<ll> (n+1, INF));
     // cout << "set edges' weights:" << endl;
+    vector< map<int, ll> > graph(n+1);
     for(int i=0;i<m;i++) {
         int u, v;
         ll w;
         cin >> u >> v >> w;
-        if(w < graph[u][v]) {
+        auto iter_uv = graph[u].find(v);
+        if(iter_uv == graph[u].end() || w < graph[u][v]) {
             graph[u][v] = w;
             graph[v][u] = w;
         }
@@ -38,26 +40,24 @@ int main() {
     // cout << "dijkstra:" << endl;
     priority_queue<min_distance, vector<min_distance>, greater<min_distance>> nodes_to_be_added;
 
-    for(int i=1;i<=n;i++) {
-        if(i == s) nodes_to_be_added.push(min_distance{s, 0});
-        else nodes_to_be_added.push(min_distance{i, INF});
-    }
     vector<ll> min_distance_to_s(n+1, INF);
     min_distance_to_s[s]=0;
     vector<bool> is_added(n+1, 0);
     nodes_to_be_added.push(min_distance{s, 0});
-    while(nodes_to_be_added.empty() == false) {
+    while(nodes_to_be_added.empty() == false && is_added[t] == false) {
         min_distance tmp = nodes_to_be_added.top();
         int u = tmp.vertex;
         nodes_to_be_added.pop();
         if(is_added[u]) continue;
         is_added[u]=true;
         //update distance
-        for(int j=1;j<=n;j++) {
-            if(graph[u][j] < INF && is_added[j] == false) {
-                if(min_distance_to_s[u]+graph[u][j] < min_distance_to_s[j]) {
-                    min_distance_to_s[j] = min_distance_to_s[u]+graph[u][j];
-                    nodes_to_be_added.push( min_distance{j, min_distance_to_s[j]} );
+        for(auto iter=graph[u].begin(); iter != graph[u].end(); ++iter) {
+            int vertex = iter->first;
+            int edge_weight = iter->second;
+            if(is_added[vertex] == false) {
+                if(min_distance_to_s[u] + edge_weight < min_distance_to_s[vertex]) {
+                    min_distance_to_s[vertex] = min_distance_to_s[u] + edge_weight;
+                    nodes_to_be_added.push( min_distance{vertex, min_distance_to_s[vertex]} );
                 }
             }
         }
@@ -107,6 +107,50 @@ void dijkstra1() {
         is_added[next_add] = true;
         u = next_add;
         cnt++;
+    }
+    cout << min_distance_to_s[t] << endl;
+}
+
+void dijkstra2() {
+    int n, m, s, t;
+    cin >> n >> m >> s >> t;
+    vector< vector<ll> > graph(n+1, vector<ll> (n+1, INF));
+    // cout << "set edges' weights:" << endl;
+    for(int i=0;i<m;i++) {
+        int u, v;
+        ll w;
+        cin >> u >> v >> w;
+        if(w < graph[u][v]) {
+            graph[u][v] = w;
+            graph[v][u] = w;
+        }
+    }
+    // cout << "dijkstra:" << endl;
+    priority_queue<min_distance, vector<min_distance>, greater<min_distance>> nodes_to_be_added;
+
+    for(int i=1;i<=n;i++) {
+        if(i == s) nodes_to_be_added.push(min_distance{s, 0});
+        else nodes_to_be_added.push(min_distance{i, INF});
+    }
+    vector<ll> min_distance_to_s(n+1, INF);
+    min_distance_to_s[s]=0;
+    vector<bool> is_added(n+1, 0);
+    nodes_to_be_added.push(min_distance{s, 0});
+    while(nodes_to_be_added.empty() == false) {
+        min_distance tmp = nodes_to_be_added.top();
+        int u = tmp.vertex;
+        nodes_to_be_added.pop();
+        if(is_added[u]) continue;
+        is_added[u]=true;
+        //update distance
+        for(int j=1;j<=n;j++) {
+            if(graph[u][j] < INF && is_added[j] == false) {
+                if(min_distance_to_s[u]+graph[u][j] < min_distance_to_s[j]) {
+                    min_distance_to_s[j] = min_distance_to_s[u]+graph[u][j];
+                    nodes_to_be_added.push( min_distance{j, min_distance_to_s[j]} );
+                }
+            }
+        }
     }
     cout << min_distance_to_s[t] << endl;
 }
