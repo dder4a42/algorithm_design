@@ -6,39 +6,16 @@
 #include<algorithm>
 using namespace std;
 
-int travel_time=0;
+int n, m;
+int travel_time = 0;
+int num_evalue_propositon = 0;
+bool is_satisfiable = true;
 
 struct node_end_time {
     int vertex;
     int end_time;
     node_end_time(int _ver=0, int _end=0): vertex(_ver), end_time(_end) {}
 };
-
-void dfs(int vertex, vector<vector<int> >& graph, vector<bool>& is_visited, vector<node_end_time>& end_time) {
-    // if(is_visited[vertex]) return ;
-    is_visited[vertex] = true;
-    ++travel_time;
-    for (auto iter : graph[vertex]) {
-        if (is_visited[iter] == false) {
-            dfs(iter, graph, is_visited, end_time);
-        }
-    }
-    ++travel_time;
-    end_time[vertex].vertex = vertex;
-    end_time[vertex].end_time = travel_time;
-    // cout << "end a vertex " << vertex << " with time " << travel_time << endl;
-}
-
-void shrink_vertex(int vertex, vector<vector<int> >& graph, vector<bool>& is_visited, int representative_element, map<int, int>& scc, map<int, set<int>>& members) {
-    is_visited[vertex] = true;
-    scc[vertex] = representative_element;
-    members[representative_element].insert(vertex);
-    for (auto iter : graph[vertex]) {
-        if (is_visited[iter] == false) {
-            shrink_vertex(iter, graph, is_visited, representative_element, scc, members);
-        }
-    }
-}
 
 //odd index p=1, even index p=0
 inline int get_vertex(int x, int truth) {
@@ -64,24 +41,80 @@ inline int get_truth_value(int index) {
     return index % 2 == 1;
 }
 
-int main() {
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
-    // 2-SAT
-    int n, m;
-    cin >> n >> m;
-    // create graph
-    vector<vector<int> > graph(2*n+1);
-    vector<vector<int> > re_graph(2*n+1);
+void dfs(int vertex, vector<vector<int> >& graph, vector<bool>& is_visited, vector<node_end_time>& end_time) {
+    // if(is_visited[vertex]) return ;
+    is_visited[vertex] = true;
+    ++travel_time;
+    for (auto iter : graph[vertex]) {
+        if (is_visited[iter] == false) {
+            dfs(iter, graph, is_visited, end_time);
+        }
+    }
+    ++travel_time;
+    end_time[vertex].vertex = vertex;
+    end_time[vertex].end_time = travel_time;
+    // cout << "end a vertex " << vertex << " with time " << travel_time << endl;
+}
+
+void shrink_vertex(int vertex, vector<vector<int> >& graph, vector<bool>& is_visited, int representative_element, vector<int>& scc, vector<int>& solution, vector<bool>& is_evaluated) {
+    if(!is_satisfiable || num_evalue_propositon >= n) return ;
+    is_visited[vertex] = true;
+    scc[vertex] = representative_element;
+    int propositon = get_proposition(vertex);
+    if(is_evaluated[propositon] == false) {
+        is_evaluated[propositon] = true;
+        num_evalue_propositon++;
+        solution[propositon] = get_truth_value(vertex);
+        // cout << "evalue " << propositon << " to " << solution[propositon] << endl;
+    }else if(scc[vertex] == scc[get_reverse_vertex(vertex)]) is_satisfiable = false;
+    for (auto iter : graph[vertex]) {
+        if (is_visited[iter] == false) {
+            shrink_vertex(iter, graph, is_visited, representative_element, scc, solution, is_evaluated);
+        }
+    }
+}
+
+
+
+void create_graph(vector<vector<int>>& graph, vector<vector<int>>& re_graph) {
     for(int index=0;index<m;++index) {
         int i, a, j, b;
         cin >> i >> a >> j >> b;
         if(i == j && a != b) continue; // self-loop
-        graph[get_reverse_vertex(get_vertex(i, a))].push_back(get_vertex(j, b));
-        graph[get_reverse_vertex(get_vertex(j, b))].push_back(get_vertex(i, a));
-        re_graph[get_vertex(j, b)].push_back(get_reverse_vertex(get_vertex(i, a)));
-        re_graph[get_vertex(i, a)].push_back(get_reverse_vertex(get_vertex(j, b)));
+        if(a && b) {
+            graph[2*i].push_back(2*j-1);
+            graph[2*j].push_back(2*i-1);
+            re_graph[2*j-1].push_back(2*i);
+            re_graph[2*i-1].push_back(2*j);
+        }else if(!a && b) {
+            graph[2*i-1].push_back(2*j-1);
+            graph[2*j].push_back(2*i);
+            re_graph[2*j-1].push_back(2*i-1);
+            re_graph[2*i].push_back(2*j);
+        }else if(a && !b) {
+            graph[2*i].push_back(2*j);
+            graph[2*j-1].push_back(2*i-1);
+            re_graph[2*j].push_back(2*i);
+            re_graph[2*i-1].push_back(2*j-1);
+        }else {
+            graph[2*i-1].push_back(2*j);
+            graph[2*j-1].push_back(2*i);
+            re_graph[2*j].push_back(2*i-1);
+            re_graph[2*i].push_back(2*j-1);
+        }
     }
+}
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+    // 2-SAT
+    // int n, m;
+    cin >> n >> m;
+    // create graph
+    vector<vector<int> > graph(2*n+1);
+    vector<vector<int> > re_graph(2*n+1);
+    create_graph(graph, re_graph);
     // cout << "create graph" << endl;
 
     // find SCC
@@ -100,76 +133,31 @@ int main() {
     
     // treat vertices in the same SCC a super vertex
     fill(is_visited.begin(), is_visited.end(), false);
-    map<int, int> super_vertex;
-    map<int, set<int>> scc;
-    map<int, set<int>> dag;
-    map<int, int> in_degree;
+    vector<int> belong_to_scc(2*n+1, 0);
+    vector<bool> is_envalue(n+1, false);
+    vector<int> solution(n+1, 0);
     for(int i=1;i<=2*n;++i) {
         int u = end_time[i].vertex;
         if(is_visited[u] == false) {
-            dag[u] = {};
-            in_degree[u] = 0;
-            shrink_vertex(u, graph, is_visited, u, super_vertex, scc);
+            // dag[u] = {};
+            // in_degree[u] = 0;
+            shrink_vertex(u, graph, is_visited, u, belong_to_scc, solution, is_envalue);
         }
     }
     // cout << "shrink vertex" << endl;
 
     vector<vector<int>>().swap(re_graph);
-    vector<node_end_time>().swap(end_time);
-    vector<bool>().swap(is_visited);
+    // vector<node_end_time>().swap(end_time);
+    // vector<bool>().swap(is_visited);
 
     // check if contradict
-    for(int i=1; i<=2*n; i+=2) {
-        if(super_vertex[i] == super_vertex[i+1]) {
-            cout << "No" << endl; return 0;
-        }
+    if(is_satisfiable) cout << "Yes" << endl;
+    else {
+        cout << "No" << endl; return 0;
     }
-    cout << "Yes" << endl;
 
     // cout << "check satisfiable" << endl;
 
-    // add edges for DAG
-    vector<int> topo_order;
-    for(int i=1;i<=2*n;++i) {
-        for(auto iter = graph[i].begin(); iter != graph[i].end(); ++iter) {
-            if(super_vertex[i] != super_vertex[*iter]) {
-                if(dag[super_vertex[i]].find(super_vertex[*iter]) == dag[super_vertex[i]].end()) {
-                    dag[super_vertex[i]].insert(super_vertex[*iter]);
-                    in_degree[super_vertex[*iter]]++;
-                }
-            }
-        }
-    }
-
-    // topological order
-    queue<int> tmp;
-    for(auto iter=in_degree.begin(); iter != in_degree.end(); ++iter) {
-        if(iter->second == 0) {
-            // topo_order.push_back(iter->first);
-            tmp.push(iter->first);
-        }
-    }
-    while(topo_order.size() < in_degree.size()) { // or until tmp is empty
-        int u = tmp.front();
-        tmp.pop();
-        topo_order.push_back(u);
-        for(auto v: dag[u]) {
-            in_degree[v]--;
-            if(in_degree[v] == 0) tmp.push(v);
-        }
-    }
-
-    vector<bool> is_envalue(n+1, false);
-    vector<int> solution(n+1, 0);
-    for(int i=topo_order.size()-1; i>=0; --i) {
-        int super_node = topo_order[i];
-        for(auto vertex: scc[super_node]) {
-            if(is_envalue[get_proposition(vertex)] == false) {
-                is_envalue[get_proposition(vertex)] = true;
-                solution[get_proposition(vertex)] = get_truth_value(vertex);
-            }
-        }
-    }
     for(int i=1;i<=n;++i) {
         cout << solution[i] << " ";
     }
