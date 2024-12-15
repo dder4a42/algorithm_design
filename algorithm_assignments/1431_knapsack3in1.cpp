@@ -10,15 +10,35 @@ int main() {
 
     int n, W; // numbers of things, capacility of knapsack
     cin >> n >> W;
-    vector<int> weight(n+1, 0);
-    vector<int> value(n+1, 0);
-    vector<int> quantity(n+1, 0);
+    vector<int> weight;
+    vector<int> value;
+    vector<int> quantity;
     for(int i=1;i<=n;i++) {
         int w, v, c;
         cin >> w >> v >> c;
-        weight[i] = w;
-        value[i] = v;
-        quantity[i] = c;
+        if(c == 1 || c > 10000) {
+            weight.push_back(w);
+            value.push_back(v);
+            quantity.push_back(c);
+        }else {
+            int k=1;
+            while (c > k) {
+                weight.push_back(w*k);
+                value.push_back(v*k);
+                quantity.push_back(k);
+                c -= k;
+                k *= 2;
+            }
+            weight.push_back(w*c);
+            value.push_back(v*c);
+            quantity.push_back(c);
+        }
+        
+    }
+    n = weight.size();
+
+    for(int i=0;i<n;i++) {
+        cout << weight[i] << ", " << value[i] << ", " << quantity[i] << endl;
     }
 
     vector<ll> dp(W+1, 0);
@@ -31,18 +51,15 @@ int main() {
                     dp[j] = max(dp[j-weight[i]] + value[i], dp[j]);
                 }
             }
-        }else {
+        }else{
             for(int j=W;j>=weight[i];j--) {
                 if(i==0 || j==0) {
                     dp[j] = 0;
                 }else {
-                    for(int k=1;j >= k*weight[i] && k <= quantity[i];k++) {
-                        dp[j] = max(dp[j], dp[j-k*weight[i]] + k * value[i]);
-                    }
+                    dp[j] = max(dp[j], dp[j-weight[i]] + value[i]);
                 }
             }
         }
-        
     }
 
     std::cout << dp[W] << endl;
