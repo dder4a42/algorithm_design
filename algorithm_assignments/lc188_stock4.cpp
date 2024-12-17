@@ -16,26 +16,26 @@ int main() {
         cin >> prices[i];
     }
 
-    vector<vector<vector<int>>> dp(n, vector<vector<int>> (2, vector<int> (k+1, 0)));
+    vector<vector<vector<int>>> dp(n, vector<vector<int>> (2, vector<int> (k, 0)));
 
     dp[0][0][0] = 0;
     dp[0][1][0] = -prices[0];
-    for(int i=1;i<=k;i++) {
+    for(int i=1;i<k;i++) {
         dp[0][0][i] = 0;
         dp[0][1][i] = -prices[0];
     }
 
     for(int i=1;i<n;i++) {
-        dp[i][0][0] = dp[i-1][0][0];
+        dp[i][0][0] = max(dp[i-1][0][0], dp[i-1][1][0] + prices[i]);
         dp[i][1][0] = -prices[i];
-        for(int j=1;j<=k;j++) {
+        for(int j=1;j<k;j++) {
             dp[i][0][j] = max(dp[i-1][0][j], dp[i-1][1][j] + prices[i]);
             dp[i][1][j] = max(dp[i-1][1][j], dp[i-1][0][j-1] - prices[i]);
         }
     }
 
     int max_one = 0;
-    for(int i=0;i<=k;i++) {
+    for(int i=0;i<k;i++) {
         max_one = max(dp[n-1][0][i], max_one);
     }
     cout << max_one << endl;
