@@ -47,3 +47,7 @@ base case is $dp[0][w]=value[0]$ for $w\ge weight[0]$, not only $dp[0][weight[0]
 since update $dp[i][j]$ only use $dp[i-1][j]$ and $dp[i-1][j-weight[i]]$ whose second index is all less than $j$, we can use a 1D array to maintain states. 
 
 in bounded knapsack problem, suppose $a_{ij}$ is j-th item of i-th kind of item. Then to consider choosing $a_{i1},a_{i2}$ is the same as considering choosing $a_{i2},a_{i3}$. Thus, view it as a 01 knapsack is unnecessary since some items are the same. we just consider the numbers instead of combination of them. 
+
+## 1433
+
+think of buying a stock and sale it as a pair. find such pairs as many as possible. 
