@@ -27,7 +27,7 @@ int main() {
 
     for(int i=1;i<n;i++) {
         dp[i][0][0] = max(dp[i-1][0][0], dp[i-1][1][0] + prices[i]);
-        dp[i][1][0] = -prices[i];
+        dp[i][1][0] = max(dp[i-1][1][0], -prices[i]);
         for(int j=1;j<k;j++) {
             dp[i][0][j] = max(dp[i-1][0][j], dp[i-1][1][j] + prices[i]);
             dp[i][1][j] = max(dp[i-1][1][j], dp[i-1][0][j-1] - prices[i]);
