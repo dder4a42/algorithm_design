@@ -7,6 +7,25 @@ int main() {
     // cin.tie(nullptr);
 
     int n;
+    cin >> n;
+    vector<int> prices(n, 0);
+    for(int i=0;i<n;i++) {
+        cin >> prices[i];
+    }
+    if(n < 2) return 0;
+    int money = 0;
+    for(int i=1;i<prices.size();i++) {
+        if(prices[i] > prices[i-1]) {
+            money += prices[i]-prices[i-1];
+        }
+    }
+    cout << money << endl;
+    
+    return 0;
+}
+
+void dp_method() {
+    int n;
     vector<int> prices;
     cin >> n;
     prices.resize(n, 0);
@@ -24,6 +43,4 @@ int main() {
     }
 
     cout << dp[n-1][0] << endl;
-    
-    return 0;
 }
